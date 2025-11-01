@@ -1,0 +1,15 @@
+#define NUMBER_OF_TETRIMINOS 7
+#define ROWS 20
+#define COLUMNS 10
+#define WINDOW_WIDTH(width) (width*2+4)
+#define WINDOW_HEIGHT(height) (height+3)
+#define STAT_WINDOW_WIDTH 22
+#define CLOCKS_PER_MILISEC (CLOCKS_PER_SEC/1000)
+#define NOKEY ' '
+
+
+#define TURN_CLOCKWISE KEY_UP
+#define MOVE_RIGHT KEY_RIGHT
+#define MOVE_DOWN KEY_DOWN
+#define MOVE_LEFT KEY_LEFT
+#define DELAY_TIME (CLOCKS_PER_MILISEC*10)
