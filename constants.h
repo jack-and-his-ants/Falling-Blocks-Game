@@ -2,7 +2,7 @@
 #define ROWS 20
 #define COLUMNS 10
 #define WINDOW_WIDTH(width) (width*2+4)
-#define WINDOW_HEIGHT(height) (height+3)
+#define WINDOW_HEIGHT(height) (height+1)
 #define STAT_WINDOW_WIDTH 22
 #define CLOCKS_PER_MILISEC (CLOCKS_PER_SEC/1000)
 #define NOKEY ' '

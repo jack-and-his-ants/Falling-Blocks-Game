@@ -2,7 +2,8 @@
 /*{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ FALLING BLOCKS }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
 /*{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
 
-
+#define STATUS_WINDOW_WIDTH 22
+#define STATUS_WINDOW_HEIGHT 21
 // GAME PROJECT:
 /*
                         /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
@@ -59,7 +60,7 @@ typedef struct fallingBlocksGame
     Tetrimino*nextTetrimino;
     int**gameField;
     int points;
-    unsigned int time;
+    double time;
 }fallingBlocksGame;
 
 /////////////////////////////////////////////////////////////////////////
@@ -67,13 +68,22 @@ typedef struct fallingBlocksGame
 /////////////////////////////////////////////////////////////////////////
 
 
-WINDOW*initializeCursesWindow(){
+WINDOW*initializePlayWindow(WINDOW*parent){
+    
+    WINDOW*win=subwin(parent,WINDOW_HEIGHT(ROWS),WINDOW_WIDTH(COLUMNS),1,0);
+    return win;
+}
+WINDOW*initializeStatsWindow(WINDOW*parent){
+    WINDOW*win=subwin(parent,STATUS_WINDOW_HEIGHT,STATUS_WINDOW_WIDTH,1,24);
+    return win;
+}
+WINDOW*initializeCursesMainWindow(){
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
-    WINDOW*win=newwin(WINDOW_HEIGHT(ROWS),WINDOW_WIDTH(COLUMNS),1,1);
+    WINDOW*win=newwin(WINDOW_HEIGHT(ROWS)+2,WINDOW_WIDTH(COLUMNS)+STATUS_WINDOW_WIDTH,0,0);
     return win;
 }
 
@@ -86,7 +96,9 @@ fallingBlocksGame*initializeGame(){
     newGame->nextTetrimino = generateRandomTetrimino();
     newGame->points = 0;
     newGame->time=0;
-    newGame->playWin=initializeCursesWindow();
+    newGame->mainWin=initializeCursesMainWindow();
+    newGame->playWin=initializePlayWindow(newGame->mainWin);
+    newGame->statWin=initializeStatsWindow(newGame->mainWin);
 
     return newGame;
 }
@@ -100,6 +112,8 @@ void pushTetriminoOnScreen(fallingBlocksGame*game){
         }
     }
 }
+
+
 
 void clearTetriminoView(fallingBlocksGame*game){
     Tetrimino*tetrimino=game->currentTetrimino;
@@ -130,12 +144,112 @@ void printField(WINDOW*win,int**field){
                 mvwprintw(win,ROWS,j*2+2,"**");
     }
     mvwprintw(win,ROWS,COLUMNS*2+2,"!>");
-    for(int j = 0 ; j < COLUMNS ; j++){
-                mvwprintw(win,ROWS+1,j*2+2,"\\/");
+}
+
+void printStatus(fallingBlocksGame*game,double currentTime){
+    WINDOW*win = game->statWin;
+    werase(win);
+    
+    
+    // Borders
+    for(int i = 0; i < STATUS_WINDOW_HEIGHT; i++ ){
+        mvwprintw(win, i, 0, "<!");
+        mvwprintw(win, i, STATUS_WINDOW_WIDTH - 2, "!>");
+    }
+    
+    // Time
+    mvwprintw(win, 2, 3, "Time:");
+    mvwprintw(win, 3, 3, "%.2f s.", currentTime);
+    
+    // Points
+    mvwprintw(win, 5, 3, "Points:");
+    mvwprintw(win, 6, 3, "%d", game->points);
+    
+    // Next Tetrimino
+    mvwprintw(win, 8, 3, "Next Tetrimino:");
+    
+    // Best Player
+    mvwprintw(win, 17, 3, "Best Player:");
+    mvwprintw(win, 18, 3, "Jacek");
+    
+    // High Score
+    mvwprintw(win, 19, 3, "High Score:");
+    mvwprintw(win, 20, 3, "%d", game->points);
+
+    
+    wrefresh(win);
+}
+
+
+
+void printNextTetrimino(fallingBlocksGame*game) {
+    WINDOW* win = game->statWin;
+    Tetrimino* t = game->nextTetrimino;
+    
+    if(!t) return;
+    
+    int startY = 10;
+    int startX = 4;
+    
+    // Rysowanie ramki
+    mvwprintw(win, startY - 1, startX - 2, "~~~~~~~~~~~~~~~~~~");
+    
+    for(int i = 0; i < 6; i++) {
+        mvwprintw(win, startY + i, startX - 2, "§");
+        mvwprintw(win, startY + i, startX + 16, "§");
+    }
+    
+    mvwprintw(win, startY + 6, startX - 2, "~~~~~~~~~~~~~~~~~~");
+    
+    // Wyświetlanie tetrimino z odpowiednim przesunięciem
+    switch(t->matrixSize) {
+        case 2:  // O tetrimino (2x2)
+            for(int i = 0; i < 2; i++) {
+                for(int j = 0; j < 2; j++) {
+                    if(t->matrix[i][j]) {
+                        mvwprintw(win, startY + 2 + i, startX + 4 + j * 2, "[]");
+                    }
+                }
+            }
+            break;
+            
+        case 3:  // L, J, S, Z, T tetrimino (3x3)
+            for(int i = 0; i < 3; i++) {
+                for(int j = 0; j < 3; j++) {
+                    if(t->matrix[i][j]) {
+                        mvwprintw(win, startY + 2 + i, startX + 3 + j * 2, "[]");
+                    }
+                }
+            }
+            break;
+            
+        case 4:  // I tetrimino (4x4)
+            for(int i = 0; i < 4; i++) {
+                for(int j = 0; j < 4; j++) {
+                    if(t->matrix[i][j]) {
+                        mvwprintw(win, startY + 1 + i, startX + 2 + j * 2, "[]");
+                    }
+                }
+            }
+            break;
+    }
+    
+    wrefresh(win);
+}
+void PrintMainWindow(fallingBlocksGame*game){
+    for(int i=0;i<WINDOW_WIDTH(COLUMNS)+STATUS_WINDOW_WIDTH;i+=2){
+        mvwprintw(game->mainWin,0,i,"/\\");
+    }
+
+    
+    for(int i=0;i<WINDOW_WIDTH(COLUMNS)+STATUS_WINDOW_WIDTH;i+=2){
+        mvwprintw(game->mainWin,WINDOW_HEIGHT(ROWS)+1,i,"/\\");
     }
 }
-void printStatus(WINDOW*statwin){
-
+unsigned long getMillis(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
 
 int correctMove(int direction, fallingBlocksGame*game){
@@ -195,7 +309,7 @@ int checkFullRows(fallingBlocksGame*game){
             }
             fullRowCount+=1;
         }
-        pointsToAdd=10*fullRowCount;
+        pointsToAdd=10*fullRowCount*fullRowCount;
     }
     game->points+=pointsToAdd;
     return 0;
@@ -230,13 +344,13 @@ int main(){
     fallingBlocksGame*game=initializeGame();
     nodelay(stdscr,1);
     noecho();
-    unsigned int startTime=(clock()/CLOCKS_PER_MILISEC);
-    unsigned int compareTime = clock();
+    unsigned long compareTime = getMillis();
+    unsigned long startTime = getMillis();
     int choice;
-    int elapsed_turns=0;
-
+    double currentTime;
     while((choice=wgetch(stdscr))!='q'){
-        unsigned int timeDiff = (clock() - compareTime+elapsed_turns*(DELAY_TIME))/(CLOCKS_PER_MILISEC);
+        currentTime = (double)(getMillis()-startTime)/1000;
+        unsigned long timeDiff = getMillis() - compareTime;
         if(timeDiff>1000){
             if(!correctMove(MOVE_DOWN,game)){
                 checkFullRows(game);
@@ -249,16 +363,25 @@ int main(){
                 
             }
 
-            compareTime=clock();
-            elapsed_turns=0;
+            compareTime=getMillis();
         }
+        
         moveTetrimino(choice,game);
         flushinp();
         pushTetriminoOnScreen(game);
-        printField(game->playWin,game->gameField);
-        wrefresh(game->playWin);
+
         
+
+        PrintMainWindow(game);
+
+        printField(game->playWin,game->gameField);
+        printStatus(game,currentTime);
+        printNextTetrimino(game);
+
+        wrefresh(game->mainWin);
+        wrefresh(game->playWin);
+        wrefresh(game->statWin);
+        clearTetriminoView(game);
         usleep(DELAY_TIME);
-        elapsed_turns+=1;
     }
 }
