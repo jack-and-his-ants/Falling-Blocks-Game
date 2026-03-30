@@ -1,6 +1,8 @@
 #include "../include/utilities.h"
-#include "../constants.h"
+#include "../include/constants.h"
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 
 int**initializeMatrix(int size){
     int**matrix=(int**)malloc(sizeof(int*)*size);
@@ -25,3 +27,11 @@ int**initializeField(){
     }
     return field;
 }
+
+unsigned long getMillis(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+}
+

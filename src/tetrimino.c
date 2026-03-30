@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "../include/tetrimino.h"
-#include "../constants.h"
+#include "../include/constants.h"
 #include "../include/utilities.h"
 
 void deleteTetrimino(Tetrimino*tetrimino){
@@ -74,7 +74,7 @@ Tetrimino*createSTetrimino(){
     newTetrimino->location->y=0;
     newTetrimino->matrixSize=3;
     newTetrimino->matrix=initializeMatrix(3);
-    newTetrimino->tetriminoLetter='J';
+    newTetrimino->tetriminoLetter='S';
     // [[1,0,0],
     //  [1,1,0],
     //  [0,1,0]]
@@ -127,7 +127,7 @@ Tetrimino*createTTetrimino(){
     newTetrimino->location->y=0;
     newTetrimino->matrixSize=3;
     newTetrimino->matrix=initializeMatrix(3);
-    newTetrimino->tetriminoLetter='L';
+    newTetrimino->tetriminoLetter='T';
     // [[0,0,0],
     //  [1,1,1],
     //  [0,1,0]]
