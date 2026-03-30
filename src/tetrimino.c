@@ -200,3 +200,26 @@ Tetrimino*copyTetrimino(Tetrimino*tetrimino){
 
     
 }
+
+int getTetriminoColor(Tetrimino *t)
+{
+    switch (t->tetriminoLetter)
+    {
+    case ('I'):
+        return 1;
+    case ('O'):
+        return 2;
+    case ('T'):
+        return 3;
+    case ('S'):
+        return 4;
+    case ('Z'):
+        return 5;
+    case ('J'):
+        return 6;
+    case ('L'):
+        return 7;
+    }
+    return 0;
+}
+

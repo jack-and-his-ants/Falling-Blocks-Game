@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct Point
 {
     int x;
@@ -23,3 +25,4 @@ Tetrimino*createTTetrimino();
 Tetrimino*generateRandomTetrimino();
 void turnTetriminoClockwise(Tetrimino*tetrimino,int**field);
 Tetrimino*copyTetrimino(Tetrimino*tetrimino);
+int getTetriminoColor(Tetrimino *t);

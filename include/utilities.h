@@ -1,3 +1,5 @@
+#pragma once
+
 int**initializeMatrix(int size);
 int**initializeField();
 int myRand();
