@@ -33,7 +33,7 @@
 */
 
 #include <curses.h>
-#include <stdio.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -44,11 +44,18 @@
 //  [0,1,0],
 //  [0,1,1]]
 
+typedef struct inputState
+{
+    int lastKey;
+    pthread_mutex_t mutex;
+} inputState;
+
 typedef struct fallingBlocksGame
 {
     WINDOW *mainWin;
     WINDOW *playWin;
     WINDOW *statWin;
+    inputState input;
     Tetrimino *currentTetrimino;
     Tetrimino *nextTetrimino;
     int **gameField;
@@ -87,9 +94,13 @@ fallingBlocksGame *initializeGame()
 {
     fallingBlocksGame *newGame = (fallingBlocksGame *)malloc(sizeof(fallingBlocksGame));
 
+    newGame->input.lastKey=0;
+    pthread_mutex_init(&(newGame->input.mutex),NULL);
+
     newGame->gameField = initializeField();
     newGame->currentTetrimino = generateRandomTetrimino();
     newGame->nextTetrimino = generateRandomTetrimino();
+
     newGame->points = 0;
     newGame->time = 0;
     newGame->mainWin = initializeCursesMainWindow();
@@ -105,6 +116,22 @@ fallingBlocksGame *initializeGame()
     init_pair(7, COLOR_WHITE, COLOR_BLACK);   // L
 
     return newGame;
+}
+
+void* inputThread(void*arg){
+    fallingBlocksGame*game = (fallingBlocksGame*)arg;
+    while(1){
+        int ch = getch();
+
+        pthread_mutex_lock(&(game->input.mutex));
+        game->input.lastKey = ch;
+        pthread_mutex_unlock(&(game->input.mutex));
+        
+        if(ch=='q'){
+            break;
+        }
+    }
+    return NULL;
 }
 
 int getTetriminoColor(Tetrimino *t)
@@ -135,7 +162,7 @@ void pushTetriminoOnScreen(fallingBlocksGame *game)
     int color = getTetriminoColor(tetrimino);
     for (int i = 0; i < tetrimino->matrixSize; i++)
     {
-        
+
         for (int j = 0; j < game->currentTetrimino->matrixSize; j++)
         {
             if (tetrimino->matrix[i][j])
@@ -260,7 +287,6 @@ void printNextTetrimino(fallingBlocksGame *game)
                 mvwprintw(win, offsetY + i, offsetX + j * 2, "[]");
 
                 wattroff(win, COLOR_PAIR(color));
-                
             }
         }
     }
@@ -395,15 +421,24 @@ int main()
 {
     srand(time(NULL) ^ getpid() ^ getMillis());
     fallingBlocksGame *game = initializeGame();
-    nodelay(stdscr, 1);
+    pthread_t input;
+    pthread_create(&input,NULL,inputThread,game);
     noecho();
 
     unsigned long compareTime = getMillis();
     unsigned long startTime = getMillis();
     int choice;
     double currentTime;
-    while ((choice = wgetch(stdscr)) != 'q')
+    int running = 1;
+    while (running)
     {
+        pthread_mutex_lock(&game->input.mutex);
+        choice = game->input.lastKey;
+        game->input.lastKey = 0;
+        pthread_mutex_unlock(&game->input.mutex);
+        if(choice=='q'){
+            running=0;
+        }
         currentTime = (double)(getMillis() - startTime) / 1000;
         unsigned long timeDiff = getMillis() - compareTime;
         if (timeDiff > 1000)
@@ -426,7 +461,6 @@ int main()
         }
 
         moveTetrimino(choice, game);
-        flushinp();
         pushTetriminoOnScreen(game);
 
         werase(game->mainWin);
@@ -444,4 +478,6 @@ int main()
         clearTetriminoView(game);
         usleep(DELAY_TIME);
     }
+    pthread_join(input, NULL);
+    return 0;
 }
