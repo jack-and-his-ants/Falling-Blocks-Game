@@ -18,6 +18,7 @@ typedef struct fallingBlocksGame
     int **gameField;
     int points;
     double time;
+    char blocked;
 } fallingBlocksGame;
 
 fallingBlocksGame *initializeGame();

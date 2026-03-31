@@ -8,7 +8,7 @@
 fallingBlocksGame *initializeGame()
 {
     fallingBlocksGame *newGame = (fallingBlocksGame *)malloc(sizeof(fallingBlocksGame));
-
+    newGame->blocked=0;
     newGame->input.lastKey=0;
     pthread_mutex_init(&(newGame->input.mutex),NULL);
 
@@ -95,18 +95,15 @@ int correctMove(int direction, fallingBlocksGame *game)
 
                 if (tempTetrimino->location->x + x < 0 || tempTetrimino->location->x + x >= COLUMNS || tempTetrimino->location->y + y < 0 || tempTetrimino->location->y + y >= ROWS)
                 {
-                    pushTetriminoOnScreen(game);
                     return 0;
                 }
                 if (game->gameField[tempTetrimino->location->y + y][tempTetrimino->location->x + x] != 0)
                 {
-                    pushTetriminoOnScreen(game);
                     return 0;
                 }
             }
         }
     }
-    pushTetriminoOnScreen(game);
     return 1;
 }
 
@@ -169,11 +166,18 @@ void moveTetrimino(int direction, fallingBlocksGame *game)
     else if (direction == MOVE_LEFT)
     {
         game->currentTetrimino->location->x -= 1;
+    }else if (direction == HARD_DROP){
+        while(correctMove(MOVE_DOWN,game)){
+            game->currentTetrimino->location->y += 1;
+        }
+        game->blocked = 1;
     }
 }
 void changeTetrimino(fallingBlocksGame *game)
 {
+    pushTetriminoOnScreen(game);
     deleteTetrimino(game->currentTetrimino);
     game->currentTetrimino = game->nextTetrimino;
     game->nextTetrimino = generateRandomTetrimino();
 }
+

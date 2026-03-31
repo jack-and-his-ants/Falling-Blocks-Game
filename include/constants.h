@@ -1,3 +1,6 @@
+#pragma once
+#include <ncurses.h>
+
 #define NUMBER_OF_TETRIMINOS 7
 #define ROWS 20
 #define COLUMNS 10
@@ -13,6 +16,7 @@
 #define MOVE_RIGHT KEY_RIGHT
 #define MOVE_DOWN KEY_DOWN
 #define MOVE_LEFT KEY_LEFT
+#define HARD_DROP ' '
 #define DELAY_TIME (CLOCKS_PER_MILISEC*10)
 
 #define RAND_A 1664525

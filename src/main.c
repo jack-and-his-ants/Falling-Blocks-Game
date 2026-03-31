@@ -27,7 +27,6 @@
                         <! . . . . . . . . . .!><!                  !>
                         <!********************!><!******************!>
                         \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-
 */
 #include <curses.h>
 #include <pthread.h>
@@ -40,19 +39,36 @@
 #include "../include/game.h"
 #include "../include/render.h"
 #include "../include/input.h"
-// [[0,1,0],
-//  [0,1,0],
-//  [0,1,1]]
 
 
+void render(double currentTime, fallingBlocksGame*game){
+        pushTetriminoOnScreen(game);
 
 
-/////////////////////////////////////////////////////////////////////////
-////////////////////// INITIALIZERS /////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
+        werase(game->mainWin);
+        werase(game->playWin);
+        werase(game->statWin);
+
+        PrintMainWindow(game);
+        printField(game->playWin, game->gameField);
+        printStatus(game, currentTime);
+        printNextTetrimino(game);
+
+        wrefresh(game->mainWin);
+        wrefresh(game->playWin);
+        wrefresh(game->statWin);
 
 
+        clearTetriminoView(game);
+}
 
+int getChoice(fallingBlocksGame*game){
+        pthread_mutex_lock(&game->input.mutex);
+        int choice = game->input.lastKey;
+        game->input.lastKey = 0;
+        pthread_mutex_unlock(&game->input.mutex);
+        return choice;
+}
 int main()
 {
     srand(time(NULL) ^ getpid() ^ getMillis());
@@ -68,25 +84,24 @@ int main()
     int running = 1;
     while (running)
     {
-        pthread_mutex_lock(&game->input.mutex);
-        choice = game->input.lastKey;
-        game->input.lastKey = 0;
-        pthread_mutex_unlock(&game->input.mutex);
+        choice = getChoice(game);
         if(choice=='q'){
             running=0;
         }
         currentTime = (double)(getMillis() - startTime) / 1000;
         unsigned long timeDiff = getMillis() - compareTime;
-        if (timeDiff > 1000)
+        if (timeDiff > 1000 || game->blocked==1)
         {
             if (!correctMove(MOVE_DOWN, game))
             {
-                checkFullRows(game);
+
                 changeTetrimino(game);
+                checkFullRows(game);
                 if (!correctMove(MOVE_DOWN, game))
                 {
                     break;
                 }
+                game->blocked = 0;
             }
             else
             {
@@ -97,21 +112,9 @@ int main()
         }
 
         moveTetrimino(choice, game);
-        pushTetriminoOnScreen(game);
+        
+        render(currentTime,game);
 
-        werase(game->mainWin);
-        werase(game->playWin);
-        werase(game->statWin);
-
-        PrintMainWindow(game);
-        printField(game->playWin, game->gameField);
-        printStatus(game, currentTime);
-        printNextTetrimino(game);
-
-        wrefresh(game->mainWin);
-        wrefresh(game->playWin);
-        wrefresh(game->statWin);
-        clearTetriminoView(game);
         usleep(DELAY_TIME);
     }
     
