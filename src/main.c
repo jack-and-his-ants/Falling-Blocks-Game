@@ -41,34 +41,9 @@
 #include "../include/input.h"
 
 
-void render(double currentTime, fallingBlocksGame*game){
-        pushTetriminoOnScreen(game);
 
 
-        werase(game->mainWin);
-        werase(game->playWin);
-        werase(game->statWin);
 
-        PrintMainWindow(game);
-        printField(game->playWin, game->gameField);
-        printStatus(game, currentTime);
-        printNextTetrimino(game);
-
-        wrefresh(game->mainWin);
-        wrefresh(game->playWin);
-        wrefresh(game->statWin);
-
-
-        clearTetriminoView(game);
-}
-
-int getChoice(fallingBlocksGame*game){
-        pthread_mutex_lock(&game->input.mutex);
-        int choice = game->input.lastKey;
-        game->input.lastKey = 0;
-        pthread_mutex_unlock(&game->input.mutex);
-        return choice;
-}
 int main()
 {
     srand(time(NULL) ^ getpid() ^ getMillis());
@@ -77,11 +52,12 @@ int main()
     pthread_create(&input,NULL,inputThread,game);
     noecho();
 
-    unsigned long compareTime = getMillis();
+    unsigned long compareTime = getMillis(),compareTimeForGravity = getMillis();
     unsigned long startTime = getMillis();
     int choice;
     double currentTime;
     int running = 1;
+    unsigned long gravityTime = 1000;
     while (running)
     {
         choice = getChoice(game);
@@ -90,7 +66,11 @@ int main()
         }
         currentTime = (double)(getMillis() - startTime) / 1000;
         unsigned long timeDiff = getMillis() - compareTime;
-        if (timeDiff > 1000 || game->blocked==1)
+        if (getMillis()-compareTimeForGravity>1000 && gravityTime>=400){
+            gravityTime-=5;
+            compareTimeForGravity = getMillis();
+        }
+        if (timeDiff > gravityTime || game->blocked==1)
         {
             if (!correctMove(MOVE_DOWN, game))
             {

@@ -4,6 +4,7 @@
 #include "../include/constants.h"
 #include "../include/utilities.h"
 #include "../include/render.h"
+#include "../include/input.h"
 
 fallingBlocksGame *initializeGame()
 {
@@ -71,7 +72,7 @@ int correctMove(int direction, fallingBlocksGame *game)
     clearTetriminoView(game);
     if (direction == TURN_CLOCKWISE)
     {
-        turnTetriminoClockwise(tempTetrimino, game->gameField);
+        turnTetriminoClockwise(tempTetrimino);
     }
     else if (direction == MOVE_RIGHT)
     {
@@ -153,7 +154,7 @@ void moveTetrimino(int direction, fallingBlocksGame *game)
     clearTetriminoView(game);
     if (direction == TURN_CLOCKWISE)
     {
-        turnTetriminoClockwise(game->currentTetrimino, game->gameField);
+        turnTetriminoClockwise(game->currentTetrimino);
     }
     else if (direction == MOVE_RIGHT)
     {

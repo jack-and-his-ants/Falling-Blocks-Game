@@ -163,7 +163,7 @@ Tetrimino*generateRandomTetrimino(){
     return NULL;
 }
 
-void turnTetriminoClockwise(Tetrimino*tetrimino,int**field){
+void turnTetriminoClockwise(Tetrimino*tetrimino){
     for (int i = 0; i < tetrimino->matrixSize; i++) {
         for (int j = i + 1; j < tetrimino->matrixSize; j++) {
             int temp = tetrimino->matrix[i][j];

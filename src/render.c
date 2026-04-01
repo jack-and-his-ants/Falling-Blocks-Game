@@ -141,3 +141,24 @@ void PrintMainWindow(fallingBlocksGame *game)
         mvwprintw(game->mainWin, WINDOW_HEIGHT(ROWS) + 1, i, "/\\");
     }
 }
+
+void render(double currentTime, fallingBlocksGame*game){
+        pushTetriminoOnScreen(game);
+
+
+        werase(game->mainWin);
+        werase(game->playWin);
+        werase(game->statWin);
+
+        PrintMainWindow(game);
+        printField(game->playWin, game->gameField);
+        printStatus(game, currentTime);
+        printNextTetrimino(game);
+
+        wrefresh(game->mainWin);
+        wrefresh(game->playWin);
+        wrefresh(game->statWin);
+
+
+        clearTetriminoView(game);
+}

@@ -23,6 +23,6 @@ Tetrimino*createOTetrimino();
 Tetrimino*createITetrimino();
 Tetrimino*createTTetrimino();
 Tetrimino*generateRandomTetrimino();
-void turnTetriminoClockwise(Tetrimino*tetrimino,int**field);
+void turnTetriminoClockwise(Tetrimino*tetrimino);
 Tetrimino*copyTetrimino(Tetrimino*tetrimino);
 int getTetriminoColor(Tetrimino *t);
