@@ -3,3 +3,4 @@ program
 game
 src/*.o
 tetris
+highscore.dat

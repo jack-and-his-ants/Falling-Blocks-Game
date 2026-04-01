@@ -2,6 +2,7 @@
 #include "../include/constants.h"
 #include "../include/game.h"
 #include "../include/render.h"
+#include "../include/menu.h"
 
 WINDOW *initializePlayWindow()
 {
@@ -16,7 +17,6 @@ WINDOW *initializeStatsWindow()
 }
 WINDOW *initializeCursesMainWindow()
 {
-    initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
@@ -73,16 +73,14 @@ void printStatus(fallingBlocksGame *game, double currentTime)
     mvwprintw(win, 5, 3, "Points:");
     mvwprintw(win, 6, 3, "%d", game->points);
 
-    // Next Tetrimino
+  
     mvwprintw(win, 8, 3, "Next Tetrimino:");
 
-    // Best Player
-    mvwprintw(win, 17, 3, "Best Player:");
-    mvwprintw(win, 18, 3, "Jacek");
+        HighScore highScore = loadHighScore();
+    mvwprintw(win, 17, 3, "High Score:");
+    mvwprintw(win, 18, 3, "%d", highScore.score);
+    mvwprintw(win, 19, 3, "by %s", highScore.name);
 
-    // High Score
-    mvwprintw(win, 19, 3, "High Score:");
-    mvwprintw(win, 20, 3, "%d", game->points);
 }
 
 void printNextTetrimino(fallingBlocksGame *game)
@@ -93,7 +91,7 @@ void printNextTetrimino(fallingBlocksGame *game)
         return;
 
     int startY = 10;
-    int startX = 3; // było 4
+    int startX = 3;
 
     mvwprintw(win, startY - 1, startX, "~~~~~~~~~~~~~~~~");
 

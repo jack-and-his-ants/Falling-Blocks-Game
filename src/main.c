@@ -1,33 +1,3 @@
-/*{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
-/*{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ FALLING BLOCKS }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
-/*{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
-
-// GAME PROJECT:
-/*
-                        /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
-                        <! . . . . . . . . . .!><! Time:            !>
-                        <! . . . . . . . . . .!><! 158.72 s.        !>
-                        <! . . . . . . . . . .!><!                  !>
-                        <! . . . .[][] . . . .!><! Points:          !>
-                        <! . . . .[] . . . . .!><! 93               !>
-                        <! . . . .[] . . . . .!><!                  !>
-                        <! . . . . . . . . . .!><! Next Tetrimino:  !>
-                        <! . . . . . . . . . .!><!~~~~~~~~~~~~~~~~~~!>
-                        <! . . . . . . . . . .!><!§                §!>
-                        <! . . . . . . . . . .!><!§       []       §!>
-                        <! . . . . . . . . . .!><!§       []       §!>
-                        <! . . . . . . . . . .!><!§       []       §!>
-                        <! . . . . . . . . . .!><!§       []       §!>
-                        <! . . . . . . . . . .!><!§                §!>
-                        <! . . . . . . . . . .!><!~~~~~~~~~~~~~~~~~~!>
-                        <! . . . . . . . . . .!><! Best Player:     !>
-                        <! . . . . . . . . . .!><! Jacek            !>
-                        <! . . . . . . . . . .!><! High Score:      !>
-                        <! . . . . . . . . . .!><! 127878           !>
-                        <! . . . . . . . . . .!><!                  !>
-                        <!********************!><!******************!>
-                        \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-*/
 #include <curses.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -39,65 +9,106 @@
 #include "../include/game.h"
 #include "../include/render.h"
 #include "../include/input.h"
-
-
-
-
+#include "../include/menu.h"
 
 int main()
 {
     srand(time(NULL) ^ getpid() ^ getMillis());
+    
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+    start_color();
+
+    
+    GameState state = showMainMenu();
+    
+    if (state == GAME_QUIT) {
+        endwin();
+        return 0;
+    }
+    
+    char playerName[20];
+    getPlayerName(playerName, 20);
+
+    // Start game
+    clear();
+
     fallingBlocksGame *game = initializeGame();
     pthread_t input;
-    pthread_create(&input,NULL,inputThread,game);
-    noecho();
-
-    unsigned long compareTime = getMillis(),compareTimeForGravity = getMillis();
+    pthread_create(&input, NULL, inputThread, game);
+    
+    unsigned long compareTime = getMillis(), compareTimeForGravity = getMillis();
     unsigned long startTime = getMillis();
     int choice;
     double currentTime;
     int running = 1;
     unsigned long gravityTime = 1000;
+    
     while (running)
     {
         choice = getChoice(game);
-        if(choice=='q'){
-            running=0;
+        
+        if (choice == 'q') {
+            running = 0;
         }
+        
         currentTime = (double)(getMillis() - startTime) / 1000;
         unsigned long timeDiff = getMillis() - compareTime;
-        if (getMillis()-compareTimeForGravity>1000 && gravityTime>=400){
-            gravityTime-=5;
+        
+        if (getMillis() - compareTimeForGravity > 1000 && gravityTime >= 400) {
+            gravityTime -= 5;
             compareTimeForGravity = getMillis();
         }
-        if (timeDiff > gravityTime || game->blocked==1)
-        {
-            if (!correctMove(MOVE_DOWN, game))
-            {
-
+        
+        if (timeDiff > gravityTime || game->blocked == 1) {
+            if (!correctMove(MOVE_DOWN, game)) {
                 changeTetrimino(game);
                 checkFullRows(game);
-                if (!correctMove(MOVE_DOWN, game))
-                {
+                saveHighScore(playerName,game->points);
+                if (!correctMove(MOVE_DOWN, game)) {
                     break;
                 }
                 game->blocked = 0;
-            }
-            else
-            {
+            } else {
                 moveTetrimino(MOVE_DOWN, game);
             }
-
             compareTime = getMillis();
         }
-
-        moveTetrimino(choice, game);
         
-        render(currentTime,game);
-
+        moveTetrimino(choice, game);
+        render(currentTime, game);
         usleep(DELAY_TIME);
     }
+    saveHighScore(playerName,game->points);
+    
+    // Game over
+    clear();
+    int startY = LINES / 2 - 3;
+    int startX = (COLS - 30) / 2;
+    
+    attron(A_BOLD);
+    mvprintw(startY, startX, "==============================");
+    mvprintw(startY + 1, startX, "         GAME OVER!          ");
+    mvprintw(startY + 2, startX, "==============================");
+    attroff(A_BOLD);
+    
+    mvprintw(startY + 4, startX + 5, "Player: %s", playerName);
+    mvprintw(startY + 5, startX + 5, "Your score: %d", game->points);
+    
+    HighScore highScore = loadHighScore();
+    mvprintw(startY + 7, startX + 5, "High Score: %d by %s", 
+             highScore.score, highScore.name);
+    
+    mvprintw(startY + 9, startX + 5, "Press any key to exit");
+    
+    refresh();
+    getch();
     
     pthread_join(input, NULL);
+    endwin();
+    
     return 0;
 }
