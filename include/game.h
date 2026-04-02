@@ -22,6 +22,7 @@ typedef struct fallingBlocksGame
 } fallingBlocksGame;
 
 fallingBlocksGame *initializeGame();
+void destroyGame(fallingBlocksGame *game);
 void clearTetriminoView(fallingBlocksGame *game);
 void pushTetriminoOnScreen(fallingBlocksGame *game);
 
@@ -29,3 +30,4 @@ int correctMove(int direction, fallingBlocksGame *game);
 int checkFullRows(fallingBlocksGame *game);
 void moveTetrimino(int direction, fallingBlocksGame *game);
 void changeTetrimino(fallingBlocksGame *game);
+void deleteGame(fallingBlocksGame**game);

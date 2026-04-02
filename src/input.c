@@ -3,6 +3,9 @@
 #include "../include/game.h"
 
 void* inputThread(void*arg){
+    if(arg==NULL){
+        return NULL;
+    }
     fallingBlocksGame*game = (fallingBlocksGame*)arg;
     while(1){
         int ch = getch();
@@ -19,6 +22,9 @@ void* inputThread(void*arg){
 }
 
 int getChoice(fallingBlocksGame*game){
+        if(game==NULL){
+            return -1;
+        }
         pthread_mutex_lock(&game->input.mutex);
         int choice = game->input.lastKey;
         game->input.lastKey = 0;

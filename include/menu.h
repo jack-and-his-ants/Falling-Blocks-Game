@@ -17,3 +17,4 @@ GameState showMainMenu();
 void saveHighScore(const char *name, int score);
 HighScore loadHighScore();
 void getPlayerName(char *name, int maxLen);
+void gameOver(char*playerName,fallingBlocksGame*game);

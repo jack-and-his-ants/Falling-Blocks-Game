@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -pthread -I./include
 LDFLAGS = -lncurses -lm
 
-SRC = src/main.c src/game.c src/tetrimino.c src/render.c src/input.c src/utilities.c src/menu.c
+SRC = src/main.c src/game.c src/tetrimino.c src/render.c src/input.c src/utilities.c src/menu.c src/gameplay.c
 OBJ = $(SRC:.c=.o)
 TARGET = tetris
 

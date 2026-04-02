@@ -9,19 +9,48 @@
 fallingBlocksGame *initializeGame()
 {
     fallingBlocksGame *newGame = (fallingBlocksGame *)malloc(sizeof(fallingBlocksGame));
-    newGame->blocked=0;
-    newGame->input.lastKey=0;
-    pthread_mutex_init(&(newGame->input.mutex),NULL);
+    if (newGame == NULL)
+    {
+        return NULL;
+    }
+    newGame->blocked = 0;
+    newGame->input.lastKey = 0;
+    pthread_mutex_init(&(newGame->input.mutex), NULL);
 
     newGame->gameField = initializeField();
+    if(newGame->gameField == NULL) {
+        destroyGame(newGame);
+        return NULL;
+    }
+
     newGame->currentTetrimino = generateRandomTetrimino();
+    if(newGame->currentTetrimino==NULL){
+        destroyGame(newGame);
+        return NULL;
+    }
     newGame->nextTetrimino = generateRandomTetrimino();
+    if(newGame->nextTetrimino==NULL){
+        destroyGame(newGame);
+        return NULL;
+    }
 
     newGame->points = 0;
     newGame->time = 0;
     newGame->mainWin = initializeCursesMainWindow();
+    if(newGame->mainWin==NULL){
+        destroyGame(newGame);
+        return NULL;
+    }
     newGame->playWin = initializePlayWindow();
+    if(newGame->playWin==NULL){
+        destroyGame(newGame);
+        return NULL;
+    }
     newGame->statWin = initializeStatsWindow();
+    if(newGame->statWin==NULL){
+        destroyGame(newGame);
+        return NULL;
+    }
     start_color();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);    // I
     init_pair(2, COLOR_YELLOW, COLOR_BLACK);  // O
@@ -33,9 +62,55 @@ fallingBlocksGame *initializeGame()
 
     return newGame;
 }
+void destroyGame(fallingBlocksGame *game)
+{
+    if (game == NULL) {
+        return;
+    }
+    
+    if (game->mainWin != NULL) {
+        delwin(game->mainWin);
+        game->mainWin = NULL;
+    }
+    if (game->playWin != NULL) {
+        delwin(game->playWin);
+        game->playWin = NULL;
+    }
+    if (game->statWin != NULL) {
+        delwin(game->statWin);
+        game->statWin = NULL;
+    }
+    
+    if (game->gameField != NULL) {
+        for (int i = 0; i < ROWS; i++) {
+            if (game->gameField[i] != NULL) {
+                free(game->gameField[i]);
+                game->gameField[i] = NULL;
+            }
+        }
+        free(game->gameField);
+        game->gameField = NULL;
+    }
+    
+    if (game->currentTetrimino != NULL) {
+        deleteTetrimino(game->currentTetrimino);
+        game->currentTetrimino = NULL;
+    }
+    if (game->nextTetrimino != NULL) {
+        deleteTetrimino(game->nextTetrimino);
+        game->nextTetrimino = NULL;
+    }
+    
+    pthread_mutex_destroy(&(game->input.mutex));
+    
+    free(game);
+}
 
 void pushTetriminoOnScreen(fallingBlocksGame *game)
 {
+    if(game==NULL || game->currentTetrimino==NULL){
+        return;
+    }
     Tetrimino *tetrimino = game->currentTetrimino;
     int color = getTetriminoColor(tetrimino);
     for (int i = 0; i < tetrimino->matrixSize; i++)
@@ -53,6 +128,9 @@ void pushTetriminoOnScreen(fallingBlocksGame *game)
 
 void clearTetriminoView(fallingBlocksGame *game)
 {
+    if(game==NULL || game->currentTetrimino==NULL){
+        return;
+    }
     Tetrimino *tetrimino = game->currentTetrimino;
     for (int i = 0; i < tetrimino->matrixSize; i++)
     {
@@ -68,7 +146,14 @@ void clearTetriminoView(fallingBlocksGame *game)
 
 int correctMove(int direction, fallingBlocksGame *game)
 {
+    if (game == NULL)
+        return 0;
+
     Tetrimino *tempTetrimino = copyTetrimino(game->currentTetrimino);
+
+    if (tempTetrimino == NULL)
+        return 0;
+
     clearTetriminoView(game);
     if (direction == TURN_CLOCKWISE)
     {
@@ -96,22 +181,29 @@ int correctMove(int direction, fallingBlocksGame *game)
 
                 if (tempTetrimino->location->x + x < 0 || tempTetrimino->location->x + x >= COLUMNS || tempTetrimino->location->y + y < 0 || tempTetrimino->location->y + y >= ROWS)
                 {
+                    deleteTetrimino(tempTetrimino);
                     return 0;
                 }
                 if (game->gameField[tempTetrimino->location->y + y][tempTetrimino->location->x + x] != 0)
                 {
+                    deleteTetrimino(tempTetrimino);
                     return 0;
                 }
             }
         }
     }
+    deleteTetrimino(tempTetrimino);
     return 1;
 }
 
 int checkFullRows(fallingBlocksGame *game)
 {
+    if (game == NULL || game->gameField==NULL)
+        return 0;
     int **field = game->gameField;
+
     int pointsToAdd = 0, fullRowCount = 0;
+
     for (int i = 0; i < ROWS; i++)
     {
 
@@ -147,6 +239,10 @@ int checkFullRows(fallingBlocksGame *game)
 
 void moveTetrimino(int direction, fallingBlocksGame *game)
 {
+
+    if(game==NULL || game->currentTetrimino==NULL)
+        return;
+
     if (!correctMove(direction, game))
     {
         return;
@@ -167,8 +263,11 @@ void moveTetrimino(int direction, fallingBlocksGame *game)
     else if (direction == MOVE_LEFT)
     {
         game->currentTetrimino->location->x -= 1;
-    }else if (direction == HARD_DROP){
-        while(correctMove(MOVE_DOWN,game)){
+    }
+    else if (direction == HARD_DROP)
+    {
+        while (correctMove(MOVE_DOWN, game))
+        {
             game->currentTetrimino->location->y += 1;
         }
         game->blocked = 1;
@@ -176,9 +275,11 @@ void moveTetrimino(int direction, fallingBlocksGame *game)
 }
 void changeTetrimino(fallingBlocksGame *game)
 {
+    if (game==NULL || game->currentTetrimino==NULL){
+        return;
+    }
     pushTetriminoOnScreen(game);
     deleteTetrimino(game->currentTetrimino);
     game->currentTetrimino = game->nextTetrimino;
     game->nextTetrimino = generateRandomTetrimino();
 }
-

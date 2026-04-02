@@ -95,7 +95,6 @@ void getPlayerName(char *name, int maxLen) {
 }
 
 GameState showMainMenu() {
-    int choice = 0;
     int ch;
     
     while (1) {
@@ -129,4 +128,28 @@ GameState showMainMenu() {
             return GAME_QUIT;
         }
     }
+}
+
+void gameOver(char*playerName,fallingBlocksGame*game){
+    clear();
+    int startY = LINES / 2 - 3;
+    int startX = (COLS - 30) / 2;
+    
+    attron(A_BOLD);
+    mvprintw(startY, startX, "==============================");
+    mvprintw(startY + 1, startX, "         GAME OVER!          ");
+    mvprintw(startY + 2, startX, "==============================");
+    attroff(A_BOLD);
+    
+    mvprintw(startY + 4, startX + 5, "Player: %s", playerName);
+    mvprintw(startY + 5, startX + 5, "Your score: %d", game->points);
+    
+    HighScore highScore = loadHighScore();
+    mvprintw(startY + 7, startX + 5, "High Score: %d by %s", 
+             highScore.score, highScore.name);
+    
+    mvprintw(startY + 9, startX + 5, "Press q to exit");
+    
+    refresh();
+    getch();
 }

@@ -28,8 +28,14 @@ WINDOW *initializeCursesMainWindow()
 
 void printField(WINDOW *win, int **field)
 {
+    if(win==NULL || field==NULL){
+        return;
+    }
     for (int i = 0; i < ROWS; i++)
     {
+        if(field[i]==NULL){
+            return;
+        }
         mvwprintw(win, i, 0, "<!");
         for (int j = 0; j < COLUMNS; j++)
         {
@@ -57,7 +63,9 @@ void printField(WINDOW *win, int **field)
 void printStatus(fallingBlocksGame *game, double currentTime)
 {
     WINDOW *win = game->statWin;
-
+    if(win == NULL){
+        return;
+    }
     // Borders
     for (int i = 0; i < STATUS_WINDOW_HEIGHT; i++)
     {
@@ -66,12 +74,12 @@ void printStatus(fallingBlocksGame *game, double currentTime)
     }
 
     // Time
-    mvwprintw(win, 2, 3, "Time:");
-    mvwprintw(win, 3, 3, "%.2f s.", currentTime);
+    mvwprintw(win, 1, 3, "Time:");
+    mvwprintw(win, 2, 3, "%.2f s.", currentTime);
 
     // Points
-    mvwprintw(win, 5, 3, "Points:");
-    mvwprintw(win, 6, 3, "%d", game->points);
+    mvwprintw(win, 4, 3, "Points:");
+    mvwprintw(win, 5, 3, "%d", game->points);
 
   
     mvwprintw(win, 8, 3, "Next Tetrimino:");
@@ -87,7 +95,7 @@ void printNextTetrimino(fallingBlocksGame *game)
 {
     WINDOW *win = game->statWin;
     Tetrimino *t = game->nextTetrimino;
-    if (!t)
+    if (!t || !win)
         return;
 
     int startY = 10;
@@ -129,6 +137,9 @@ void printNextTetrimino(fallingBlocksGame *game)
 }
 void PrintMainWindow(fallingBlocksGame *game)
 {
+    if (!game || !game->mainWin){
+        return;
+    }
     for (int i = 0; i < WINDOW_WIDTH(COLUMNS) + STATUS_WINDOW_WIDTH; i += 2)
     {
         mvwprintw(game->mainWin, 0, i, "/\\");
@@ -142,7 +153,12 @@ void PrintMainWindow(fallingBlocksGame *game)
 
 void render(double currentTime, fallingBlocksGame*game){
         pushTetriminoOnScreen(game);
-
+        if(game==NULL){
+            return;
+        }
+        if(!game->mainWin || !game->statWin || !game->playWin){
+            return;
+        }
 
         werase(game->mainWin);
         werase(game->playWin);
