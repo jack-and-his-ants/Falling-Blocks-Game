@@ -61,9 +61,9 @@ falling-blocks/
 ├── src/              # Source files
 ├── Makefile          # Build configuration
 ├── README.md         # This file
-└── LICENCE
+└── LICENSE
 ```
-## Licence 
+## License 
 MIT License - feel free to use and modify!
 
 ## What I Learned
